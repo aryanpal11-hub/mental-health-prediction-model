@@ -112,7 +112,7 @@ skew_pipeline=Pipeline(steps=[('skew',FunctionTransformer(np.log1p)),
 numeric_pipeline=Pipeline(steps=[('scaler',StandardScaler())]) 
 
 #3-pipeline for ordinal encoding feature 
-ordinal_pipeline=Pipeline(steps=[('encode',OrdinalEncoder(categories=['Low','Medium','High','Very High']))])
+ordinal_pipeline=Pipeline(steps=[('encode',OrdinalEncoder(categories=[['Low','Medium','High','Very High']]))])
 
 #4pipeline for onehot encodig feture
 onehot_pipeline=Pipeline(steps=[('encode',OneHotEncoder(handle_unknown="ignore"))])
@@ -123,3 +123,20 @@ preprocessor=ColumnTransformer(transformers=[('skewfeature',skew_pipeline,skewed
                                 ('numericfeature',numeric_pipeline,other_numeric_col),
                                 ('ordinalfeature',ordinal_pipeline,ordinal_col),
                                 ('onehotfeature',onehot_pipeline,other_object_col)])
+
+#now we are going to apply first pipline of our linear regression model 
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score,mean_absolute_error,mean_squared_error
+
+lr_pipeline=Pipeline(steps=[('preprocessor',preprocessor),
+                            ('model',LinearRegression())])
+
+lr_pipeline.fit(x_train,y_train)
+lr_preds=lr_pipeline.predict(x_test)
+lr_preds_train=lr_pipeline.predict(x_train)
+
+print(f"r2 score  of test data is {r2_score(y_test,lr_preds)}")
+print(f"r2 score of train data is {r2_score(y_train,lr_preds_train)}")
+print(f"mean eroor of test data is {mean_absolute_error(y_test,lr_preds)}")
+print(f"mean square of test data is {mean_squared_error(y_test,lr_preds)}")
