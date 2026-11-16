@@ -140,3 +140,66 @@ print(f"r2 score  of test data is {r2_score(y_test,lr_preds)}")
 print(f"r2 score of train data is {r2_score(y_train,lr_preds_train)}")
 print(f"mean eroor of test data is {mean_absolute_error(y_test,lr_preds)}")
 print(f"mean square of test data is {mean_squared_error(y_test,lr_preds)}")
+
+
+##now we will see another model for better accuracy specifically random forest 
+from sklearn.ensemble import RandomForestRegressor
+
+Rn_pipeline=Pipeline(steps=[('preprocessor',preprocessor),
+                            ('random forest',RandomForestRegressor())])
+
+Rn_pipeline.fit(x_train,y_train)
+Rn_preds=Rn_pipeline.predict(x_test)
+Rn_preds_train=Rn_pipeline.predict(x_train)
+
+print("/")
+print("random forest model results")
+print(f"r2 score  of test data is {r2_score(y_test,Rn_preds)}")
+print(f"r2 score of train data is {r2_score(y_train,Rn_preds_train)}")
+print(f"mean eroor of test data is {mean_absolute_error(y_test,Rn_preds)}")
+print(f"mean square of test data is {mean_squared_error(y_test,Rn_preds)}")
+
+
+#now we can see that random forest is performing well here in this dataset and as we can see that there is 
+# is a large differnce in accuracy of train and testing data so we will perform hyperparametric tuning of this data to reduce the error
+from sklearn.model_selection import RandomizedSearchCV
+
+param_grid={
+    'random forest__n_estimators':[100,200,300],
+    'random forest__max_depth':[5,10,15],
+    'random forest__min_samples_split':[2,5,10],
+    'random forest__min_samples_leaf':[1,2,4]
+}
+
+random_search=RandomizedSearchCV(estimator=Rn_pipeline,
+                                 param_distributions=param_grid,
+                                 n_iter=15,
+                                 scoring='r2',
+                                 random_state=42,
+                                 cv=5,
+                                 n_jobs=-1) ## njobs is for free proeccsor use 
+
+random_search.fit(x_train,y_train)
+print(" ")
+print(" best parameter of hyperparameter tunning")
+print(random_search.best_params_)
+
+#now we check the accracy of hyperparametric tuned model 
+best_pipeline_model=random_search.best_estimator_
+best_preds=best_pipeline_model.predict(x_test)
+best_preds_train=best_pipeline_model.predict(x_train)
+
+print("hyper parametric tuned  model results")
+print(f"r2 score  of test data is {r2_score(y_test,best_preds)}")
+print(f"r2 score of train data is {r2_score(y_train,best_preds_train)}")
+print(f"mean eroor of test data is {mean_absolute_error(y_test,best_preds)}")
+print(f"mean square of test data is {mean_squared_error(y_test,best_preds)}")
+
+
+#now we will import our best model in pkl format  for integration with fast api
+import joblib
+joblib.dump(best_pipeline_model,'Mental_health_model.pkl')
+
+
+
+
